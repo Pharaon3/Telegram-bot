@@ -1,0 +1,111 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+<div class="row justify-content-center tbl-lang-content">
+    <div class="col-md-8">
+        <div class="row language-content">
+            <div class="col-md-8">
+                <table class="table table-borded table-responsive table-striped container-fluid" id="tbl_lang">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>id</th>
+                            <th class="col-md-8">Language</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {%for lang in lang_data %}
+                        <tr>
+                            <td>{{lang['id']}}</td>
+                            <td>{{lang['name']}}</td>
+                        </tr>
+                        {%endfor%}
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-addon">Language</span>
+                    <input type="text" class="form-control" id="lang_name" placeholder="Language">
+                </div>
+                <br>
+                <button type="button" class="btn btn-success" id="add" style="float: right;">Add Language</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready(function () {
+        $("#tbl_lang").SetEditable({
+            columnsEd: "1",
+            onEdit: function (row) {
+                var row_data = row[0].outerText
+                var row_list = row_data.split('\t')
+                var row_id = row_list[0]
+                var row_value = row_list[1]
+                var data = [
+                    { id: row_id },
+                    { name: row_value }
+                ]
+                $.ajax({
+                    type: 'POST',
+                    url: '/lang/update',
+                    data: JSON.stringify(data),
+                    contentType: 'application/json',
+                    dataType: 'json',
+                    success: function (results) {
+                        alert(results.msg)
+                    }
+                })
+            },
+            onBeforeDelete: function (row) {
+                if (confirm('If delete this language you can not use the bot using this language!')) {
+                    var row_data = row[0].outerText
+                    var row_list = row_data.split('\t')
+                    var row_id = row_list[0]
+                    var data = [
+                        { id: row_id }
+                    ]
+                    $.ajax({
+                        type: 'POST',
+                        url: '/lang/delete',
+                        data: JSON.stringify(data),
+                        contentType: 'application/json',
+                        dataType: 'json',
+                        success: function (results) {
+
+                        }
+                    })
+                    return true;
+                } else return false;
+            },
+            onDelete: function () {
+                alert('Delete language successfully')
+            },
+        });
+        $('#add').click(function () {
+            if (!$('#lang_name').val() == '') {
+                var data = [
+                    { name: $('#lang_name').val() }
+                ]
+                $.ajax({
+                    type: 'POST',
+                    url: '/lang/add',
+                    data: JSON.stringify(data),
+                    contentType: 'application/json',
+                    dataType: 'json',
+                    success: function (results) {
+                        rowAddNew('tbl_lang', [results.insert_id, $('#lang_name').val()])
+                        alert('Language added successfully')
+                        $('#lang_name').val('')
+                    }
+                })
+            } else alert('Please input language name');
+
+        });
+
+    })
+</script>
+{% endblock %}

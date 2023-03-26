@@ -1,0 +1,405 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+<div>
+    <div id="tree" class="col-md-8" style="padding-left: 0px;"></div>
+    <div class="col-md-4 content-input position-fixed" style="right: 20px">
+        <br>
+        <div class="btn-dropdown" style="float: center;">
+            <div class="dropdown">
+                <button type="button" class="btn-custom btn-select" data-toggle="dropdown">Choose Lanuage</button>
+                <ul class="dropdown-menu dropdown-menu-select">
+                    {%for lang in lang_data %}
+                    <li><label class="dropdown-radio">
+                            <input type="radio" value={{lang['id']}} name="alphabet">
+                            <i>{{lang['name']}}</i>
+                        </label>
+                    </li>
+                    {%endfor%}
+                </ul>
+            </div>
+        </div>
+
+        <br>
+
+        <div class="input-group">
+            <!-- <span class="input-group"><b>Menu name</b></span></span> -->
+            <input type="text" class="form-control" id="name" placeholder="Menu name">
+        </div>
+        <br>
+        <div class="input-group">
+            <!-- <span class="input-group"><b>Description of menu</b></span> -->
+            <input type="text" class="form-control" id="description" placeholder="Description of menu">
+        </div>
+        <br>
+        <div class="checkbox">
+            <label style="padding-right: 20px;"><input type="checkbox" id="check_contact">Contact</label>
+        </div>
+
+        <div class="input-group">
+            <span class="input-group-addon">Contact</span>
+            <input type="text" class="form-control" id="contact" placeholder="link of contact">
+        </div>
+        <br>
+        <div class="checkbox">
+            <label style="padding-right: 20px;"><input type="checkbox" id="check_info">Info</label>
+        </div>
+        <div class="input-group">
+            <span class="input-group-addon">Info</span>
+            <input type="text" class="form-control" id="info" placeholder="Link of info">
+        </div>
+        <br>
+        <div class="container-fluid-inline">
+            <div class="btn-group-inline" style="text-align-last: center;">
+                <button type="button" id="add" class="btn btn-primary btn-info"><i class="bi bi-plus-square"></i>
+                    ADD</button>
+                <button type="button" id="edit" class="btn btn-primary btn-warning"><i class="bi bi-pencil-square"></i>
+                    EDIT</button>
+                <button type="button" id="delete" class="btn btn-primary btn-danger"><i class="bi bi-trash-fill"></i>
+                    DELETE</button>
+            </div>
+            <div>
+                <button type="button" id="view" class="btn btn-primary btn-warning"><i class="bi bi-eye"></i> VIEW
+                    INFO</button>
+            </div>
+        </div>
+
+
+        <div>
+            <span style="font-size: 16px;">Description:&nbsp;<span style="font-size: 16px; overflow-wrap: break-word;"
+                    id="view_description"></span></span>
+            <br>
+            <span style="font-size: 16px;">Info: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <span style="font-size: 16px; overflow-wrap: break-word;" id="view_info"></span></span>
+            <br>
+            <span style="font-size: 16px;">Contact:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="font-size: 16px; overflow-wrap: break-word;"
+                    id="view_contact"></span></span>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    $(function () {
+        var select_lang_id = 0;
+        var node_selected = false;
+        var data_menu
+        $('.dropdown-radio').find('input').change(function () {
+            var dropdown = $(this).closest('.dropdown');
+            var radioname = $(this).attr('name');
+            var checked = 'input[name=' + radioname + ']:checked';
+
+            //update the text
+            var checkedtext = $(checked).closest('.dropdown-radio').text();
+            dropdown.find('button').text(checkedtext);
+
+            //retrieve the checked value, if needed in page 
+            select_lang_id = dropdown.find(checked).val();
+            var data = [
+                { id: select_lang_id }
+            ]
+            $.ajax({
+                type: 'POST',
+                url: '/manage/visametrics/get',
+                data: JSON.stringify(data),
+                contentType: 'application/json',
+                dataType: 'json',
+                success: function (results) {
+                    node_selected = false;
+                    $('#tree').treeview({
+                        data: JSON.parse(results.data),
+                        levels: 10,
+                        onNodeSelected: function (event, data) {
+                            selected_node = data
+                            node_selected = true;
+                        },
+                        onNodeUnselected: function (event, node) {
+                            node_selected = false;
+                        }
+                    })
+                    data_menu = results.data
+                }
+            })
+        });
+
+        $('#add').click(function () {
+            if (select_lang_id != 0) {
+                if (node_selected) {
+                    if (!$('#name').val() == '') {
+                        if ($('#check_contact').is(':checked')) {
+                            if (!$('#contact').val() == '') {
+                                var name = $('#name').val()
+                                var contact = $('#contact').val()
+                                var node_id = selected_node['nodeId']
+                                var add_data = [
+                                    { "name": name },
+                                    { "description": '' },
+                                    { "type": 'c' },
+                                    { "contact": contact },
+                                    { "info": '' },
+                                    { "node_id": node_id },
+                                    { "data_menu": data_menu },
+                                    { "lang_id": select_lang_id }
+                                ]
+                                $.ajax({
+                                    type: "POST",
+                                    url: "/manage/visametrics/add",
+                                    data: JSON.stringify(add_data),
+                                    contentType: "application/json",
+                                    dataType: 'json',
+                                    success: function (results) {
+                                        var node_selected = false;
+                                        $('#tree').treeview({
+                                            data: JSON.parse(results.data),
+                                            levels: 10,
+                                            onNodeSelected: function (event, data) {
+                                                selected_node = data
+                                                node_selected = true;
+                                            },
+                                            onNodeUnselected: function (event, node) {
+                                                node_selected = false;
+                                            }
+                                        })
+                                        $('#name').val('')
+                                        $('#contact').val('')
+                                        $('#check_contact').prop('checked', false)
+                                        data_menu = results.data
+                                    }
+                                })
+                            } else alert('Please enter a contact.')
+                        } else if ($('#check_info').is(':checked')) {
+                            if (!$('#info').val() == '') {
+                                var name = $('#name').val()
+                                var info = $('#info').val()
+                                var node_id = selected_node['nodeId']
+                                var add_data = [
+                                    { "name": name },
+                                    { "description": '' },
+                                    { "type": 'i' },
+                                    { "contact": '' },
+                                    { "info": info },
+                                    { "node_id": node_id },
+                                    { "data_menu": data_menu },
+                                    { "lang_id": select_lang_id },
+                                ]
+                                $.ajax({
+                                    type: "POST",
+                                    url: "/manage/visametrics/add",
+                                    data: JSON.stringify(add_data),
+                                    contentType: "application/json",
+                                    dataType: 'json',
+                                    success: function (results) {
+                                        var node_selected = false;
+                                        $('#tree').treeview({
+                                            data: JSON.parse(results.data),
+                                            levels: 10,
+                                            onNodeSelected: function (event, data) {
+                                                selected_node = data
+                                                node_selected = true;
+                                            },
+                                            onNodeUnselected: function (event, node) {
+                                                node_selected = false;
+                                            }
+                                        })
+                                        $('#name').val('')
+                                        $('#info').val('')
+                                        $('#check_info').prop('checked', false)
+                                        data_menu = results.data
+                                    }
+                                })
+                            } else alert('Please enter a info.')
+                        } else if (!$('#description').val() == '') {
+                            var name = $('#name').val()
+                            var description = $('#description').val()
+                            var node_id = selected_node['nodeId']
+                            var add_data = [
+                                { "name": name },
+                                { "description": description },
+                                { "type": 'd' },
+                                { "contact": '' },
+                                { "info": '' },
+                                { "node_id": node_id },
+                                { "data_menu": data_menu },
+                                { "lang_id": select_lang_id },
+                            ]
+                            $.ajax({
+                                type: "POST",
+                                url: "/manage/visametrics/add",
+                                data: JSON.stringify(add_data),
+                                contentType: "application/json",
+                                dataType: 'json',
+                                success: function (results) {
+                                    var node_selected = false;
+                                    $('#tree').treeview({
+                                        data: JSON.parse(results.data),
+                                        levels: 10,
+                                        onNodeSelected: function (event, data) {
+                                            selected_node = data
+                                            node_selected = true;
+                                        },
+                                        onNodeUnselected: function (event, node) {
+                                            node_selected = false;
+                                        }
+                                    })
+                                    $('#name').val('')
+                                    $('#description').val('')
+                                    $('#check_contact').prop('checked', false)
+                                    data_menu = results.data
+                                }
+                            })
+                        } else alert('Please enter a description.')
+                    } else alert('Please enter a name of menu item')
+                }
+                else alert('Please select a menu item.')
+
+            }
+        })
+
+        $('#edit').click(function () {
+            if (select_lang_id != 0) {
+                if (node_selected) {
+                    if ($('#name').val() != '' || $('#description').val() != '' || $('#check_contact').is(':checked') || $('#check_info').is(':checked')) {
+                        var name = $('#name').val()
+                        var description = $('#description').val()
+                        var contact = ''
+                        var info = ''
+                        if (!$('#check_contact').is(':checked') || !$('#contact').val() == '') {
+                            contact = $('#contact').val()
+                        } else alert('Please fill in the contact field.')
+                        if (!$('#check_info').is(':checked') || !$('#info').val() == '') {
+                            info = $('#info').val()
+                        } else alert('Please fill in the info field.')
+                        var node_id = selected_node['nodeId']
+                        var edit_data = [
+                            { "name": name },
+                            { "description": description },
+                            { "contact": contact },
+                            { "info": info },
+                            { "node_id": node_id },
+                            { "data_menu": data_menu },
+                            { "lang_id": select_lang_id }
+                        ]
+                        $.ajax({
+                            type: "POST",
+                            url: "/manage/visametrics/update",
+                            data: JSON.stringify(edit_data),
+                            contentType: "application/json",
+                            dataType: 'json',
+                            success: function (results) {
+                                var node_selected = false;
+                                $('#tree').treeview({
+                                    data: JSON.parse(results.data),
+                                    levels: 10,
+                                    onNodeSelected: function (event, data) {
+                                        selected_node = data
+                                        node_selected = true;
+                                    },
+                                    onNodeUnselected: function (event, node) {
+                                        node_selected = false;
+                                    }
+                                })
+                                $('#tree').treeview('selectNode', [results.view_data.node_id, { silent: true }]);
+                                $('#name').val('')
+                                $('#info').val('')
+                                $('#description').val('')
+                                $('#contact').val('')
+                                $('#check_info').prop('checked', false)
+                                $('#check_contact').prop('checked', false)
+
+                                data_menu = results.data
+
+                                var view_info = results.view_data;
+
+                                $('#view_info').text('')
+                                $('#view_description').text('')
+                                $('#view_contact').text('')
+                                if ((view_info.info != undefined)) { $('#view_info').text(view_info.info) }
+                                if ((view_info.description != undefined)) { $('#view_description').text(view_info.description) }
+                                if ((view_info.contact != undefined)) { $('#view_contact').text(view_info.contact) }
+                            }
+                        })
+
+
+                    } else alert('Do not have a change value about selected menu item')
+                } else alert('Please select a menu item');
+            }
+        })
+
+        $('#delete').click(function () {
+            if (select_lang_id != 0) {
+                if (node_selected) {
+                    if (!selected_node['nodeId'] == 0) {
+                        if (confirm('Are you sure you want to delete')) {
+                            var node_id = selected_node['nodeId']
+                            var delete_data = [
+                                { "node_id": node_id },
+                                { "data_menu": data_menu },
+                                { "lang_id": select_lang_id }
+                            ]
+                            $.ajax({
+                                type: "POST",
+                                url: "/manage/visametrics/delete",
+                                data: JSON.stringify(delete_data),
+                                contentType: "application/json",
+                                dataType: 'json',
+                                success: function (results) {
+                                    var node_selected = false;
+                                    $('#tree').treeview({
+                                        data: JSON.parse(results.data),
+                                        levels: 10,
+                                        onNodeSelected: function (event, data) {
+                                            selected_node = data
+                                            node_selected = true;
+                                        },
+                                        onNodeUnselected: function (event, node) {
+                                            node_selected = false;
+                                        }
+                                    })
+                                    data_menu = results.data
+                                }
+                            })
+                        }
+                    } else alert('Node_ID is 0 so this menu can not be deleted!')
+                } else alert('Please select a menu item')
+            }
+        })
+
+        $('#view').click(function () {
+            if (select_lang_id != 0) {
+                if (node_selected) {
+                    var node_id = selected_node['nodeId']
+                    var view_data = [
+                        { "node_id": node_id },
+                        { "data_menu": data_menu },
+                    ]
+                    $.ajax({
+                        type: "POST",
+                        url: "/manage/visametrics/view",
+                        data: JSON.stringify(view_data),
+                        contentType: "application/json",
+                        dataType: 'json',
+                        success: function (results) {
+                            var view_info = results.view_data;
+                            // console.log(view_info.description);
+                            // console.log(view_info.contact);
+                            $('#view_info').text('')
+                            $('#view_description').text('')
+                            $('#view_contact').text('')
+                            if ((view_info.info != undefined)) { $('#view_info').text(view_info.info) }
+                            if ((view_info.description != undefined)) { $('#view_description').text(view_info.description) }
+                            if ((view_info.contact != undefined)) { $('#view_contact').text(view_info.contact) }
+
+
+
+                        }
+                    })
+
+                } else alert('Please select a menu item')
+            }
+        })
+
+    });
+</script>
+{% endblock %}

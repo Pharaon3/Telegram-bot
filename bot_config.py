@@ -1,0 +1,1 @@
+BOT_API_KEY = "6039625357:AAEqsY-2walintUlQsfuedC70lFzhmARw3g"

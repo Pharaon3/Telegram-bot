@@ -1,0 +1,92 @@
+{
+  "menu": [
+    {
+      "nodes": [
+        {
+          "nodes": [],
+          "text": "next",
+          "content": "help"
+        },
+        {
+          "nodes": [
+            {
+              "nodes": [],
+              "text": "test"
+            }
+          ],
+          "text": "hello"
+        },
+        {
+          "nodes": [
+            {
+              "nodes": [],
+              "text": "abb"
+            }
+          ],
+          "text": "fajno"
+        }
+      ],
+      "text": "n1"
+    },
+    {
+      "nodes": [
+        {
+          "nodes": [],
+          "text": "next"
+        },
+        {
+          "nodes": [
+            {
+              "nodes": [],
+              "text": "test"
+            }
+          ],
+          "text": "hello"
+        },
+        {
+          "nodes": [
+            {
+              "nodes": [],
+              "text": "abb"
+            }
+          ],
+          "text": "fajno"
+        }
+      ],
+      "text": "n1"
+    }
+  ]
+}
+
+{
+  "menu": [
+    {
+      "nodes": [],
+      "text": "Bot Menu"
+    }
+  ]
+}
+{
+  "menu": [
+    {
+      "nodes": [],
+      "text": "Меню бота"
+    }
+  ]
+}
+{
+  "menu": [
+    {
+      "nodes": [],
+      "text": "منوی ربات"
+    }
+  ]
+}
+{
+  "menu": [
+    {
+      "nodes": [],
+      "text": "temp_name"
+    }
+  ]
+}
